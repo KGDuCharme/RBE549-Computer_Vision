@@ -1,0 +1,8 @@
+SOURCES:
+Currently a text file, but probably will put it in a bibtex for the report.
+
+Info on object detectors:
+https://www.pyimagesearch.com/2017/09/11/object-detection-with-deep-learning-and-opencv/
+
+Info on object trackers:
+https://www.learnopencv.com/object-tracking-using-opencv-cpp-python/

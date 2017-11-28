@@ -1,0 +1,27 @@
+By Max:
+
+The following link sort of outlines the structure:
+https://medium.com/@phelixlau/speed-accuracy-trade-offs-for-modern-convolutional-object-detectors-bbad4e4e0718
+
+There seems to be two components in detection. The thing that draws the bounding box, and the actual detector. 
+We should probably break it up into these parts. In addition, I think that tracking would be a useful, if not necessary step.
+I think tracking is useful so that it keeps track of each image.
+
+DETECTION:
+Bounding Boxes:
+So far, what I've found is that Single shot multi-box detector is the norm. Haven't dug too deep yet. 
+Here is the paper that defines SSD:
+https://arxiv.org/pdf/1512.02325.pdf
+
+Detectors:
+So, the thing you found is VGG16, and the thing I found uses resnet. If I understand correctly, yours just uses VGG,
+(which the default SSD interpretation uses as well).
+Here is the paper for Resnet:
+https://arxiv.org/pdf/1512.03385.pdf
+
+
+This may be useful in deciding which to pick:
+https://arxiv.org/pdf/1611.10012.pdf
+
+Tracking:
+Only thing I've found on object tracking is the opencv stuff I included in sources.

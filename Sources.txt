@@ -5,8 +5,18 @@ Info on object detectors:
 https://www.pyimagesearch.com/2017/09/11/object-detection-with-deep-learning-and-opencv/
 https://www.pyimagesearch.com/2017/09/18/real-time-object-detection-with-deep-learning-and-opencv/
 
+TF Object detection demo:
+https://github.com/tensorflow/models/blob/master/research/object_detection/object_detection_tutorial.ipynb
+
 Info on object trackers:
 https://www.learnopencv.com/object-tracking-using-opencv-cpp-python/
 
 Github containing Caffe port of Mobilenet-ssd, tells how to train:
 https://github.com/chuanqi305/MobileNet-SSD
+
+Example of training a detector on own data:
+https://towardsdatascience.com/how-to-train-your-own-object-detector-with-tensorflows-object-detector-api-bec72ecfe1d9
+
+Transfer learning ex:
+https://deeplearningsandbox.com/how-to-use-transfer-learning-and-fine-tuning-in-keras-and-tensorflow-to-build-an-image-recognition-94b0b02444f2
+

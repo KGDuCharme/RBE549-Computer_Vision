@@ -9,12 +9,13 @@ import argparse
 import imutils
 import time
 import cv2
+import sys
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--prototxt", required=True,
+ap.add_argument("-p", "--prototxt",default="MobileNetSSD_deploy.prototxt.txt",
 	help="path to Caffe 'deploy' prototxt file")
-ap.add_argument("-m", "--model", required=True,
+ap.add_argument("-m", "--model", default="MobileNetSSD_deploy.caffemodel",
 	help="path to Caffe pre-trained model")
 ap.add_argument("-c", "--confidence", type=float, default=0.2,
 	help="minimum probability to filter weak detections")
@@ -65,6 +66,11 @@ while True:
 		# filter out weak detections by ensuring the `confidence` is
 		# greater than the minimum confidence
 		if confidence > args["confidence"]:
+			
+			'''
+			THIS IS WHERE TRACKING WOULD PROBABLY BE INCORPORATED. 
+			'''
+			
 			# extract the index of the class label from the
 			# `detections`, then compute the (x, y)-coordinates of
 			# the bounding box for the object
@@ -100,3 +106,4 @@ print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 # do a bit of cleanup
 cv2.destroyAllWindows()
 vs.stop()
+raise SystemExit

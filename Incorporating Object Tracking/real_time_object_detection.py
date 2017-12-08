@@ -21,9 +21,13 @@ import sys
 class DetectedObject:
 
 	def __init__(self, startX, startY, endX, endY, label):
+		global objIDCnt
 		self.start = [startX,startY]
 		self.end = [endX,endY]
 		self.label = label
+		self.id = objIDCnt
+		print(self.id)
+		objIDCnt = objIDCnt + 1
 
 	# Returns false if labels aren't the same. 
 	#(Note, not comparing two of the same object, just with the detection) 
@@ -70,8 +74,9 @@ net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 
 # MAX: Set frame count variable.
 cntFrame = 0
-objBuffer = []; # Buffer to store identified
-margin = 10;
+objBuffer = [] # Buffer to store identified
+margin = 20
+objIDCnt = 0
 
 # initialize the video stream, allow the cammera sensor to warmup,
 # and initialize the FPS counter

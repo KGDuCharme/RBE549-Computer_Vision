@@ -138,6 +138,7 @@ while True:
 				label = "{}: {:.2f}%".format(CLASSES[idx],
 					confidence * 100)
 				label_in = "{}".format(CLASSES[idx])
+
 				# Check if object that is detected already exists in detection buffer.
 				### NOTE CURRENT METHOD DOESNT ACCOUNT FOR DETECTOR CHANGING ITS MIND
 				###  INCORPORATE REMOVAL OF OBJECTS FROM objBuffer
@@ -147,6 +148,9 @@ while True:
 						elt.start = [startX, startY]
 						elt.end = [endX, endY]
 						doesExist = True
+						tracker.clear()
+						tracker = cv2.TrackerKCF_create()
+						tracker.init(frame, (elt.start[0],elt.start[1],elt.end[0],elt.end[1]))
 
 				if not doesExist:
 					objBuffer.append(DetectedObject(startX,startY, endX, endY, idx))

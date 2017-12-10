@@ -16,19 +16,13 @@ import six.moves.urllib as urllib
 import sys
 import tarfile
 import tensorflow as tf
-#import zipfile
-
-#from collections import defaultdict
-#from io import StringIO
-#from matplotlib import pyplot as plt
-#from PIL import Image
 
 # ## Define Object class
 # Object class.
 class DetectedObject:
-	def __init__(self, startX, startY, endX, endY, labelIDX):
+	def __init__(self, startX, startY, endX, endY, labelIDX, tracker_type):
 		global objIDCnt
-		global CLASSES
+		global category_index
 		self.start = [startX,startY]
 		self.end = [endX,endY]
 		self.labelIDX = labelIDX
@@ -36,11 +30,24 @@ class DetectedObject:
 		print(self.id)
 		objIDCnt = objIDCnt + 1
 
+		if tracker_type == 'BOOSTING':
+		    self.tracker = cv2.TrackerBoosting_create()
+		if tracker_type == 'MIL':
+		    self.tracker = cv2.TrackerMIL_create()
+		if tracker_type == 'KCF':
+		    self.tracker = cv2.TrackerKCF_create()
+		if tracker_type == 'TLD':
+		    self.tracker = cv2.TrackerTLD_create()
+		if tracker_type == 'MEDIANFLOW':
+		    self.tracker = cv2.TrackerMedianFlow_create()
+		if tracker_type == 'GOTURN':
+		    self.tracker = cv2.TrackerGOTURN_create()
+
 	# Returns false if labels aren't the same. 
 	#(Note, not comparing two of the same object, just with the detection) 
 	def compare(self, startX,startY,endX,endY,label, margin):
 		#print(label)
-		if label != CLASSES[self.labelIDX]:
+		if label != category_index[self.labelIDX]:
 			return False
 		else:
 			# Compress these if trying to be codespace efficient.
@@ -56,6 +63,12 @@ class DetectedObject:
 			else:
 				return True
 
+# ## Tracker config
+tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
+tracker_type = tracker_types[2] # Usinc KCF
+objIDCnt = 0 
+ 	
+
 
 cap = cv2.VideoCapture(0)
 if tf.__version__ != '1.4.0':
@@ -64,11 +77,6 @@ if tf.__version__ != '1.4.0':
 
 # ## Env setup
 
-# In[2]:
-
-
-# This is needed to display the images.
-#get_ipython().magic('matplotlib inline')
 
 # This is needed since the notebook is stored in the object_detection folder.
 sys.path.append("..")
@@ -76,9 +84,6 @@ sys.path.append("..")
 
 # ## Object detection imports
 # Here are the imports from the object detection module.
-
-# In[3]:
-
 
 from utils import label_map_util
 
@@ -93,9 +98,6 @@ from utils import visualization_utils as vis_util
 # 
 # By default we use an "SSD with Mobilenet" model here. See the [detection model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) for a list of other models that can be run out-of-the-box with varying speeds and accuracies.
 
-# In[4]:
-
-
 # What model to download.
 MODEL_NAME = 'tool_graph'
 # MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
@@ -108,30 +110,12 @@ PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 # List of the strings that is used to add correct label for each box.
 PATH_TO_LABELS = os.path.join('training', 'object-detection.pbtxt')
 
-# NUM_CLASSES = 90
 NUM_CLASSES = 3
 
 FRAMES_TRACK = 1
 frame_mod_count = 0
-# ## Download Model
 
-# In[5]:
-
-
-# opener = urllib.request.URLopener()
-# opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
-# tar_file = tarfile.open(MODEL_FILE)
-# for file in tar_file.getmembers():
-#   file_name = os.path.basename(file.name)
-#   if 'frozen_inference_graph.pb' in file_name:
-#     tar_file.extract(file, os.getcwd())
-
-
-# ## Load a (frozen) Tensorflow model into memory.
-
-# In[6]:
-
-
+# ## Graph import 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
   od_graph_def = tf.GraphDef()
@@ -144,17 +128,12 @@ with detection_graph.as_default():
 # ## Loading label map
 # Label maps map indices to category names, so that when our convolution network predicts `5`, we know that this corresponds to `airplane`.  Here we use internal utility functions, but anything that returns a dictionary mapping integers to appropriate string labels would be fine
 
-# In[7]:
-
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
-
-
+# DEBUG
+print(category_index)
 # ## Helper code
-
-# In[8]:
-
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
@@ -163,23 +142,6 @@ def load_image_into_numpy_array(image):
 
 
 # # Detection
-
-# In[9]:
-
-
-# For the sake of simplicity we will use only 2 images:
-# image1.jpg
-# image2.jpg
-# If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
-PATH_TO_TEST_IMAGES_DIR = 'test_images'
-TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
-
-# Size, in inches, of the output images.
-IMAGE_SIZE = (12, 8)
-
-
-# In[10]:
-
 
 with detection_graph.as_default():
   with tf.Session(graph=detection_graph) as sess:
@@ -194,13 +156,10 @@ with detection_graph.as_default():
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
     
     while(True):
-    #for image_path in TEST_IMAGE_PATHS:
       ret, image_np = cap.read()
     
-      #image = Image.open(image_path)
       # the array based representation of the image will be used later in order to prepare the
       # result image with boxes and labels on it.
-      #image_np = load_image_into_numpy_array(image)
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
       image_np_expanded = np.expand_dims(image_np, axis=0)
       
@@ -245,18 +204,15 @@ with detection_graph.as_default():
           category_index,
           use_normalized_coordinates=True,
           line_thickness=8)
-#      plt.figure(figsize=IMAGE_SIZE)
-#      plt.imshow(image_np)
-      
+
       ### END DETECTION STUFF.
       cv2.imshow('object detection',image_np) 
       frame_mod_count = (frame_mod_count+1)% FRAMES_TRACK
-      #cv2.imshow('object detection', cv2.resize(image_np, (800,600)))
+
       if cv2.waitKey(1) & 0xFF == ord('q'):
            break
 
 
-# In[ ]:
 cap.release()
 cv2.destroyAllWindows()
 

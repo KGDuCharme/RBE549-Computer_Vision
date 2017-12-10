@@ -23,6 +23,40 @@ import tensorflow as tf
 #from matplotlib import pyplot as plt
 #from PIL import Image
 
+# ## Define Object class
+# Object class.
+class DetectedObject:
+	def __init__(self, startX, startY, endX, endY, labelIDX):
+		global objIDCnt
+		global CLASSES
+		self.start = [startX,startY]
+		self.end = [endX,endY]
+		self.labelIDX = labelIDX
+		self.id = objIDCnt
+		print(self.id)
+		objIDCnt = objIDCnt + 1
+
+	# Returns false if labels aren't the same. 
+	#(Note, not comparing two of the same object, just with the detection) 
+	def compare(self, startX,startY,endX,endY,label, margin):
+		#print(label)
+		if label != CLASSES[self.labelIDX]:
+			return False
+		else:
+			# Compress these if trying to be codespace efficient.
+			delta_x_top = self.start[0] - startX
+			delta_y_top = self.start[1] - startY
+			delta_x_bottom = self.end[0] - endX
+			delta_y_bottom = self.end[1] - endY 
+			#print(delta_x_top)
+			#max_off = max(delta_x_top,delta_y_top,delta_x_bottom, delta_y_bottom)
+			max_off = max(abs(delta_x_top),abs(delta_y_top),abs(delta_x_bottom),abs(delta_y_bottom))
+			if max_off > margin:
+				return False
+			else:
+				return True
+
+
 cap = cv2.VideoCapture(0)
 if tf.__version__ != '1.4.0':
   raise ImportError('Please upgrade your tensorflow installation to v1.4.0!')
@@ -77,7 +111,8 @@ PATH_TO_LABELS = os.path.join('training', 'object-detection.pbtxt')
 # NUM_CLASSES = 90
 NUM_CLASSES = 3
 
-
+FRAMES_TRACK = 1
+frame_mod_count = 0
 # ## Download Model
 
 # In[5]:
@@ -110,7 +145,6 @@ with detection_graph.as_default():
 # Label maps map indices to category names, so that when our convolution network predicts `5`, we know that this corresponds to `airplane`.  Here we use internal utility functions, but anything that returns a dictionary mapping integers to appropriate string labels would be fine
 
 # In[7]:
-### This hits an error for me
 
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
@@ -169,10 +203,39 @@ with detection_graph.as_default():
       #image_np = load_image_into_numpy_array(image)
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
       image_np_expanded = np.expand_dims(image_np, axis=0)
-      # Actual detection.
-      (boxes, scores, classes, num) = sess.run(
-          [detection_boxes, detection_scores, detection_classes, num_detections],
-          feed_dict={image_tensor: image_np_expanded})
+      
+      ### MAX: THIS IS WHERE TRACKING VS DETECTION WOULD ACTUALLY GO.
+
+      if frame_mod_count == 0:
+	      # Actual detection.
+	      (boxes, scores, classes, num) = sess.run(
+	          [detection_boxes, detection_scores, detection_classes, num_detections],
+	          feed_dict={image_tensor: image_np_expanded})
+
+	      ### WORKFLOW
+	      '''
+	      	if scores > threshold:
+	      		compare box to existing list of boxes
+	      		if existing list of boxes has box, update box.
+	      		Else, add box
+	  	  	After search:
+				If box in list wasn't picked, decrease some internal counter
+	  	  		if counter reaches zero, remove from list.
+			For each box in list:
+				if tracker exists:
+					close previous tracker.
+				else:
+					clear tracker.
+				Initialize tracker.
+	      '''
+
+      else: # Use tracking instead.
+
+      	''' 
+      	TRACKING GOES HERE
+      	'''
+
+  	## Visualization
       # Visualization of the results of a detection.
       vis_util.visualize_boxes_and_labels_on_image_array(
           image_np,
@@ -185,7 +248,9 @@ with detection_graph.as_default():
 #      plt.figure(figsize=IMAGE_SIZE)
 #      plt.imshow(image_np)
       
+      ### END DETECTION STUFF.
       cv2.imshow('object detection',image_np) 
+      frame_mod_count = (frame_mod_count+1)% FRAMES_TRACK
       #cv2.imshow('object detection', cv2.resize(image_np, (800,600)))
       if cv2.waitKey(1) & 0xFF == ord('q'):
            break

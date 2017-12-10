@@ -47,7 +47,7 @@ class DetectedObject:
 			delta_y_bottom = self.end[1] - endY 
 			#print(delta_x_top)
 			#max_off = max(delta_x_top,delta_y_top,delta_x_bottom, delta_y_bottom)
-			max_off = abs(delta_x_top)
+			max_off = max(abs(delta_x_top),abs(delta_y_top),abs(delta_x_bottom),abs(delta_y_bottom))
 			if max_off > margin:
 				return False
 			else:

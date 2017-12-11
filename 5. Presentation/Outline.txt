@@ -2,6 +2,8 @@ Motivation
 
 Introduction
 
+Camera Set up
+
 Single Shot Detectors (SSD)
 
 Slide on Transfer Learning

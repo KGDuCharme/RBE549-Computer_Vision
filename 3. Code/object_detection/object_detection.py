@@ -125,7 +125,7 @@ tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
 
 								#KCF is taking a lot of time, Medianflow has too many false positives to be usable.
 objIDCnt = 0 
-FRAMES_TRACK = 10
+FRAMES_TRACK = 30
 SIZE_FPS_BUF = 100
 frame_mod_count = 0
 val_threshold = 0.5

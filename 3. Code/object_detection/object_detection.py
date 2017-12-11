@@ -304,11 +304,12 @@ with detection_graph.as_default():
 			frame_mod_count = (frame_mod_count+1)% FRAMES_TRACK
 
 			if cv2.waitKey(1) & 0xFF == ord('q'):
+				cap.release()
+				cv2.destroyAllWindows()
 				break
 
 
-		cap.release()
-		cv2.destroyAllWindows()
+
 
 
 

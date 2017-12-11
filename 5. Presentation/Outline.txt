@@ -1,0 +1,36 @@
+Motivation
+
+Introduction
+
+Single Shot Detectors (SSD)
+
+Slide on Transfer Learning
+
+Based on SSD_Mobilenet
+
+Collected New dataset
+
+Provided labels
+
+Created TF records, config file
+
+trainined the new model
+
+place new model into detection code and test (show video)
+
+Tracking
+
+Results (take new video)
+
+improvements on current work
+
+future work potential
+
+questions?
+
+
+
+
+
+
+

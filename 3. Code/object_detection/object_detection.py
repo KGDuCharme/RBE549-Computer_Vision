@@ -72,11 +72,7 @@ class DetectedObject:
 				return True
 
 
-# ## Tracker config
-tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW']
-tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
-								# Currently using Medianflow
-objIDCnt = 0 
+
 
 
 
@@ -122,10 +118,17 @@ PATH_TO_LABELS = os.path.join('training', 'object-detection.pbtxt')
 
 NUM_CLASSES = 3
 #FRAMES_TRACK=1
+# ## Tracker config
+tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW']
+tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
+								# Currently using Medianflow
+
+								#KCF is taking a lot of time, Medianflow has too many false positives to be usable.
+objIDCnt = 0 
 FRAMES_TRACK = 10
 frame_mod_count = 0
-val_threshold = 0.1
-track_margin = 0.05 # The whole screen is normalized 0 to 1, so 0.05 may be too big.
+val_threshold = 0.5
+track_margin = 0.1 # The whole screen is normalized 0 to 1, so 0.05 may be too big.
 objBuffer = []
 
 # ## Graph import 
@@ -201,6 +204,7 @@ with detection_graph.as_default():
 						# Compare.
 							if x.compare(elt,classes_valid[ind_new],track_margin):
 								ind_save = ind_obj
+								#print(ind_obj)
 								x.visited = True
 								doesExist = True
 
@@ -210,6 +214,7 @@ with detection_graph.as_default():
 						objBuffer.append(DetectedObject(elt,classes_valid[ind_new],scores_valid[ind_new],tracker_type))
 						elt_in = boxConvert.convertToTracking(elt,image_np.shape)
 						objBuffer[-1].tracker.init(image_np,elt_in)
+						objBuffer[-1].visited = True
 					# Add box and class to list.
 					# Initialize tracker.
 					
@@ -221,13 +226,14 @@ with detection_graph.as_default():
 						objBuffer[ind_save].createTracker(tracker_type)
 						objBuffer[ind_save].tracker.init(image_np,elt_in)
 
-				print(len(objBuffer))
 				for ind,elt in enumerate(objBuffer):
 					if elt.visited == False:
 						print('NOT VISITED')
 						elt.tracker.clear()
 						del objBuffer[ind]
-				print(len(objBuffer))
+					else:
+						elt.visited = False # Reset.
+				
 				
 			#	print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -261,7 +267,7 @@ with detection_graph.as_default():
 
 
 			fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer);
-			#print(fps)
+			print(fps)
 
 			if np.any(boxes_vis != 0):
 				vis_util.visualize_boxes_and_labels_on_image_array(

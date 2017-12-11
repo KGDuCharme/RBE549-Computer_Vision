@@ -272,10 +272,11 @@ with detection_graph.as_default():
 
 
 			fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer);
-			avgFPSBuf[ind_FPSBuf] = fps
-			fps_avg = np.mean(avgFPSBuf)
-			ind_FPSBuf = (ind_FPSBuf + 1) % SIZE_FPS_BUF	
-			print(fps_avg)
+			if fps < 500: #Above this just means that it passed through the tracking frames quickly.
+				avgFPSBuf[ind_FPSBuf] = fps
+				fps_avg = np.mean(avgFPSBuf)
+				ind_FPSBuf = (ind_FPSBuf + 1) % SIZE_FPS_BUF	
+				print(fps_avg)
 
 			if np.any(boxes_vis != 0):
 				vis_util.visualize_boxes_and_labels_on_image_array(

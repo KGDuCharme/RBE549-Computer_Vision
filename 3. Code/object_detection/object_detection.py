@@ -119,7 +119,7 @@ PATH_TO_LABELS = os.path.join('training', 'object-detection.pbtxt')
 NUM_CLASSES = 3
 #FRAMES_TRACK=1
 # ## Tracker config
-tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW']
+tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
 tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
 								# Currently using Medianflow
 

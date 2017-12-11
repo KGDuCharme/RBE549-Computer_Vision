@@ -11,6 +11,19 @@ https://github.com/tensorflow/models/blob/master/research/object_detection/objec
 Info on object trackers:
 https://www.learnopencv.com/object-tracking-using-opencv-cpp-python/
 
+Boosting paper:
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.105.5603&rep=rep1&type=pdf
+MIL slides:
+http://vision.stanford.edu/teaching/cs231b_spring1415/slides/MIL_kelsie.pdf
+KCF Paper:
+https://arxiv.org/pdf/1404.7584.pdf
+TLD Paper:
+http://ai.stanford.edu/~anenberg/papers/cs231b-tracking.pdf
+Medianflow Paper:
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.231.4285&rep=rep1&type=pdf
+Goturn Paper:
+http://davheld.github.io/GOTURN/GOTURN.html
+
 Github containing Caffe port of Mobilenet-ssd, tells how to train:
 https://github.com/chuanqi305/MobileNet-SSD
 

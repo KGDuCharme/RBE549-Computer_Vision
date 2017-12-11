@@ -126,10 +126,13 @@ tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
 								#KCF is taking a lot of time, Medianflow has too many false positives to be usable.
 objIDCnt = 0 
 FRAMES_TRACK = 10
+SIZE_FPS_BUF = 100
 frame_mod_count = 0
 val_threshold = 0.5
 track_margin = 0.1 # The whole screen is normalized 0 to 1, so 0.05 may be too big.
 objBuffer = []
+avgFPSBuf = np.zeros(SIZE_FPS_BUF)
+ind_FPSBuf = 0
 
 # ## Graph import 
 detection_graph = tf.Graph()
@@ -269,7 +272,10 @@ with detection_graph.as_default():
 
 
 			fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer);
-			print(fps)
+			avgFPSBuf[ind_FPSBuf] = fps
+			fps_avg = np.mean(avgFPSBuf)
+			ind_FPSBuf = (ind_FPSBuf + 1) % SIZE_FPS_BUF	
+			print(fps_avg)
 
 			if np.any(boxes_vis != 0):
 				vis_util.visualize_boxes_and_labels_on_image_array(

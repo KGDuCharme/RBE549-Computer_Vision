@@ -259,11 +259,13 @@ with detection_graph.as_default():
 			boxes_vis = np.zeros([max(30,size),4])
 			classes_vis = np.zeros([max(30,size),1])
 			scores_vis = np.zeros([max(30,size),1])
+			ids_vis = np.zeros([max(30,size),1])
 
 			for ind,elt in enumerate(objBuffer):
 				boxes_vis[ind] = elt.box
 				classes_vis[ind] = elt.label
 				scores_vis[ind] = elt.score
+				ids_vis[ind] = elt.id
 
 
 			fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer);
@@ -275,6 +277,7 @@ with detection_graph.as_default():
 				np.squeeze(boxes_vis),
 				np.squeeze(classes_vis).astype(np.int32),
 				np.squeeze(scores_vis),
+				np.squeeze(ids_vis),
 				category_index,
 				use_normalized_coordinates=True,
 				line_thickness=8)
@@ -285,6 +288,7 @@ with detection_graph.as_default():
 				np.squeeze(boxes),
 				np.squeeze(classes).astype(np.int32),
 				np.squeeze(scores),
+				np.squeeze(ids_vis),
 				category_index,
 				use_normalized_coordinates=True,
 				line_thickness=8)

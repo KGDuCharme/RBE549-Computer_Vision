@@ -1,12 +1,11 @@
 
 # coding: utf-8
 
-# # Object Detection Demo
-# Welcome to the object detection inference walkthrough!  This notebook will walk you step by step through the process of using a pre-trained model to detect objects in an image. Make sure to follow the [installation instructions](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md) before you start.
-
-# # Imports
-
-# In[1]:
+# # Object Detection and Tracking
+# 
+# Authors: Kevin DuCharme and Max Li
+#
+# # Description: Main body of RBE549 Final Project
 
 
 import numpy as np
@@ -57,14 +56,11 @@ class DetectedObject:
 		if label != self.label:
 			return False
 		else:
-			# Compress these if trying to be codespace efficient.
-			#print(self.box)
 			delta_x_top = self.box[0] - box_cmp[0]
 			delta_y_top = self.box[1] - box_cmp[1]
 			delta_x_bottom = self.box[2] - box_cmp[2]
 			delta_y_bottom = self.box[3] - box_cmp[3]
-			#print(delta_x_top)
-			#max_off = max(delta_x_top,delta_y_top,delta_x_bottom, delta_y_bottom)
+			
 			max_off = max(abs(delta_x_top),abs(delta_y_top),abs(delta_x_bottom),abs(delta_y_bottom))
 			if max_off > margin:
 				return False
@@ -117,22 +113,24 @@ PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('training', 'object-detection.pbtxt')
 
 NUM_CLASSES = 3
-#FRAMES_TRACK=1
+
+
 # ## Tracker config
 tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
 tracker_type = tracker_types[4] # KCF takes some absurd amount of time it seems.
 								# Currently using Medianflow
 
-								#KCF is taking a lot of time, Medianflow has too many false positives to be usable.
+								
 objIDCnt = 0 
 FRAMES_TRACK = 30
-SIZE_FPS_BUF = 100
-frame_mod_count = 0
-val_threshold = 0.5
-track_margin = 0.1 # The whole screen is normalized 0 to 1, so 0.05 may be too big.
+SIZE_FPS_BUF = 100 # size of moving average FPS buffer.
+frame_mod_count = 0 # Keeps track of when detection should occur.
+val_threshold = 0.5 # Threshold of detection
+track_margin = 0.1 # Margin the box is allowed to be off before counting as a different one.The whole screen is normalized 0 to 1
+
 objBuffer = []
 avgFPSBuf = np.zeros(SIZE_FPS_BUF)
-ind_FPSBuf = 0
+ind_FPSBuf = 0 #index for circular FPS buffer.
 
 # ## Graph import 
 detection_graph = tf.Graph()
@@ -181,10 +179,7 @@ with detection_graph.as_default():
 			# Expand dimensions since the model expects images to have shape: [1, None, None, 3]
 			image_np_expanded = np.expand_dims(image_np, axis=0)
 
-			### MAX: THIS IS WHERE TRACKING VS DETECTION WOULD ACTUALLY GO.
-
 			if frame_mod_count == 0:
-				#start_time = time.time()
 				# Actual detection.
 				(boxes, scores, classes, num) = sess.run(
 				[detection_boxes, detection_scores, detection_classes, num_detections],
@@ -207,13 +202,10 @@ with detection_graph.as_default():
 						# Compare.
 							if x.compare(elt,classes_valid[ind_new],track_margin):
 								ind_save = ind_obj
-								#print(ind_obj)
 								x.visited = True
 								doesExist = True
 
-
 					if doesExist == False:
-						### HERE is current error
 						objBuffer.append(DetectedObject(elt,classes_valid[ind_new],scores_valid[ind_new],tracker_type))
 						elt_in = boxConvert.convertToTracking(elt,image_np.shape)
 						objBuffer[-1].tracker.init(image_np,elt_in)
@@ -236,48 +228,36 @@ with detection_graph.as_default():
 						del objBuffer[ind]
 					else:
 						elt.visited = False # Reset.
-				
-				
-			#	print("--- %s seconds ---" % (time.time() - start_time))
 
 			else: # Use tracking instead.
 			
 				for elt in objBuffer:
-				#	start_time = time.time()
 					det,box_normal = elt.tracker.update(image_np)
 					elt.box = boxConvert.convertToDetecting(box_normal,image_np.shape)
-				#	print("--- %s seconds ---" % (time.time() - start_time))
-
-			''' 
-			TRACKING GOES HERE
-			'''
-
-			## Visualization
-			# Visualization of the results of a detection.
-
-			### TODO: figure out how to put th elt boxes into this.
 			
-			
+			# Pre-initialize buffers that would contain all the objects.
 			size = len(objBuffer)
 			boxes_vis = np.zeros([max(30,size),4])
 			classes_vis = np.zeros([max(30,size),1])
 			scores_vis = np.zeros([max(30,size),1])
 			ids_vis = np.zeros([max(30,size),1])
 
+			# Concatenate elements in a way that the visualization tool works.
 			for ind,elt in enumerate(objBuffer):
 				boxes_vis[ind] = elt.box
 				classes_vis[ind] = elt.label
 				scores_vis[ind] = elt.score
 				ids_vis[ind] = elt.id
 
-
+			# Keep track of FPS and average FPS
 			fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer);
 			if fps < 500: #Above this just means that it passed through the tracking frames quickly.
 				avgFPSBuf[ind_FPSBuf] = fps
 				fps_avg = np.mean(avgFPSBuf)
 				ind_FPSBuf = (ind_FPSBuf + 1) % SIZE_FPS_BUF	
-				print(fps_avg)
+				#print(fps_avg)
 
+			# If there are any items in object buffer, print them.	
 			if np.any(boxes_vis != 0):
 				vis_util.visualize_boxes_and_labels_on_image_array(
 				image_np,
@@ -289,7 +269,6 @@ with detection_graph.as_default():
 				use_normalized_coordinates=True,
 				line_thickness=8)
 			else:	
-				#print(np.squeeze(scores))
 				vis_util.visualize_boxes_and_labels_on_image_array(
 				image_np,
 				np.squeeze(boxes),
